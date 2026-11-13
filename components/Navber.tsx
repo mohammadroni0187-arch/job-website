@@ -15,6 +15,7 @@ import {
   CreditCard,
   ChevronDown,
   Loader2,
+  User,
 } from "lucide-react";
 
 const Navber = () => {
@@ -32,7 +33,7 @@ const Navber = () => {
           onSuccess: () => {
             setUserDropdownOpen(false);
             setMobileMenuOpen(false);
-            router.push("/");
+            router.push("/signIn");
             router.refresh();
           },
         },
@@ -136,6 +137,14 @@ const Navber = () => {
 
                     <div className="py-1">
                       <Link
+                        href="/profile"
+                        onClick={closeMenus}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                      >
+                        <User className="h-3.5 w-3.5 text-zinc-400" />
+                        Profile
+                      </Link>
+                      <Link
                         href="/jobs"
                         onClick={closeMenus}
                         className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white"
@@ -231,7 +240,12 @@ const Navber = () => {
 
             <div className="my-2 border-t border-zinc-800" />
 
-            {session?.user ? (
+            {isPending ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-2 text-xs text-zinc-500">
+                <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                <span>Checking session...</span>
+              </div>
+            ) : session?.user ? (
               <div className="space-y-3 px-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 font-semibold text-white uppercase shadow-inner">
@@ -246,6 +260,16 @@ const Navber = () => {
                     </p>
                   </div>
                 </div>
+
+                <Link href="/profile" onClick={closeMenus} className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center gap-2 border-zinc-800 text-zinc-200 hover:bg-zinc-900"
+                  >
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
 
                 <Button
                   onClick={handleLogout}

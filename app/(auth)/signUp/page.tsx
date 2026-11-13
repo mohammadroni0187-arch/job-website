@@ -69,7 +69,7 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await authClient.signUp.email({
+      const { error } = await authClient.signUp.email({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
