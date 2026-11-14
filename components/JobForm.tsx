@@ -12,6 +12,7 @@ import {
   MapPin,
   AlertCircle,
 } from "lucide-react";
+import { createJob, updateJob } from "@/app/dashboard/[role]/jobs/actions";
 import {
   CURRENCY_SYMBOL,
   JOB_CATEGORIES,
@@ -20,7 +21,6 @@ import {
   type JobFieldErrors,
   type JobFormValues,
 } from "@/lib/job-options";
-import { createJob } from "@/app/dashboard/[role]/jobs/new/actions";
 
 const fieldBase =
   "h-11 w-full rounded-lg border border-white/5 bg-zinc-900 px-3 text-sm text-white placeholder:text-zinc-500 outline-none transition focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50";
@@ -83,15 +83,21 @@ const initialValues: JobFormValues = {
 };
 
 export default function JobForm({
+  mode = "create",
+  jobId,
+  initialValues: initial,
   defaultCompany = "",
 }: {
+  mode?: "create" | "edit";
+  jobId?: string;
+  initialValues?: JobFormValues;
   defaultCompany?: string;
   recruiterName?: string;
 }) {
-  const [values, setValues] = useState<JobFormValues>({
-    ...initialValues,
-    company: defaultCompany,
-  });
+  const isEdit = mode === "edit";
+  const [values, setValues] = useState<JobFormValues>(
+    initial ?? { ...initialValues, company: defaultCompany },
+  );
   const [errors, setErrors] = useState<JobFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -103,14 +109,14 @@ export default function JobForm({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const jobData  ={...form}
-    console.log(jobData)
     setFormError(null);
 
     startTransition(async () => {
       // On success the action redirects, so we only get a result on failure.
-      const result = await createJob(values);
-      console.log(result)
+      const result =
+        isEdit && jobId
+          ? await updateJob(jobId, values)
+          : await createJob(values);
       if (result && !result.ok) {
         setErrors(result.fieldErrors ?? {});
         setFormError(
@@ -121,6 +127,26 @@ export default function JobForm({
       }
     });
   };
+
+  const submitButton = (
+    <button
+      type="submit"
+      disabled={isPending}
+      className="flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:from-blue-500 hover:to-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : null}
+      {isPending
+        ? isEdit
+          ? "Updating..."
+          : "Publishing..."
+        : isEdit
+          ? "Update Job"
+          : "Publish Job"}
+      {!isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
+    </button>
+  );
 
   return (
     <form
@@ -137,28 +163,27 @@ export default function JobForm({
               Manage Jobs
             </Link>{" "}
             <span aria-hidden="true">›</span>{" "}
-            <span className="text-indigo-400">Create New Listing</span>
+            {isEdit ? (
+              <>
+                <span>Job Listings &amp; Postings</span>{" "}
+                <span aria-hidden="true">›</span>{" "}
+                <span className="text-indigo-400">Update Job Post</span>
+              </>
+            ) : (
+              <span className="text-indigo-400">Create New Listing</span>
+            )}
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
-            Post a New Job
+            {isEdit ? "Update Job Post" : "Post a New Job"}
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Fill in the position specifications to attract qualified talent
-            across our network.
+            {isEdit
+              ? "Modify position specifications, compensation range, and candidate requirements for this listing."
+              : "Fill in the position specifications to attract qualified talent across our network."}
           </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all hover:from-blue-500 hover:to-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : null}
-          {isPending ? "Publishing..." : "Publish Job"}
-          {!isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
-        </button>
+        {!isEdit && submitButton}
       </div>
 
       {formError && (
@@ -436,6 +461,8 @@ export default function JobForm({
           />
         </Field>
       </section>
+
+      {isEdit && <div>{submitButton}</div>}
     </form>
   );
 }
