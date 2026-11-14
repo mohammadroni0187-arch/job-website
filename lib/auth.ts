@@ -25,6 +25,18 @@ emailAndPassword: {
       clientSecret: process.env.BETTER_AUTH_GOOGLE_SECRET as string,
     },
   },
+  databaseHooks:{
+    user:{
+      create:{
+        before:async (user)=>({
+          data:{
+            ...user,
+            role:user.role=== "recruiter"? "recruiter":"seeker",
+          },
+        }),
+      },
+    },
+  },
 
   database: mongodbAdapter(db),
 });

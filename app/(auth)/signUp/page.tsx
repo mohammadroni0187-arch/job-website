@@ -26,6 +26,7 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "seeker" as "seeker" | "recruiter",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -39,7 +40,7 @@ export default function SignUpPage() {
     }
   }, [isPending, session?.user, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -81,6 +82,7 @@ export default function SignUpPage() {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
+        role:formData.role,
       });
 
       if (error) {
@@ -181,6 +183,22 @@ export default function SignUpPage() {
                 disabled={isLoading}
                 className="border-zinc-800 bg-zinc-900/60 text-white placeholder:text-zinc-500 focus-visible:ring-indigo-500"
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="role" className="text-zinc-200">
+                I am a
+              </Label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={isLoading}
+                className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900/60 px-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              >
+                <option value="seeker">Job Seeker</option>
+                <option value="recruiter">Recruiter</option>
+              </select>
             </div>
 
             <div className="space-y-1.5">
