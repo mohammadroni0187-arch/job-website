@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { requireDashboardSession } from "@/lib/dashboard-session";
-import { getDb } from "@/lib/mongodb";
 import {
   JOB_CATEGORIES,
   JOB_TYPES,
@@ -17,9 +16,7 @@ import {
  * Only a signed-in recruiter can call this. On success it redirects, so it
  * only ever *returns* a failure result.
  */
-export async function createJob(
-  values: JobFormValues,
-): Promise<CreateJobResult> {
+export async function createJob(values: JobFormValues,): Promise<CreateJobResult> {
   const { session } = await requireDashboardSession("recruiter");
 
   const v: JobFormValues = {
@@ -68,27 +65,50 @@ export async function createJob(
     return { ok: false, fieldErrors };
   }
 
+    const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  // const apiSecret = process.env.API_SECRET;
+  // if (!apiUrl || !apiSecret) {
+  //   console.error("API_URL or API_SECRET is not set");
+  //   return { ok: false, error: "Server is not configured. Please contact support." };
+  // }
+
   try {
-    await getDb().collection("jobs").insertOne({
-      title: v.title,
-      company: v.company,
-      category: v.category,
-      type: v.type,
-      isRemote: v.isRemote,
-      location: v.location,
-      deadline: new Date(v.deadline),
-      salaryMin: min,
-      salaryMax: max,
-      salaryFrequency: v.salaryFrequency,
-      responsibilities: v.responsibilities,
-      requirements: v.requirements,
-      recruiterId: session.user.id,
-      status: "active",
-      createdAt: new Date(),
+    // Server-to-server call: the browser never sees API_SECRET.
+    const res = await fetch(`${BASE_URL}/jobs`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: `Bearer ${apiSecret}`,
+      },
+      body: JSON.stringify({
+        title: v.title,
+        company: v.company,
+        category: v.category,
+        type: v.type,
+        isRemote: v.isRemote,
+        location: v.location,
+        deadline: v.deadline, // YYYY-MM-DD, Express converts to Date
+        salaryMin: min,
+        salaryMax: max,
+        salaryFrequency: v.salaryFrequency,
+        responsibilities: v.responsibilities,
+        requirements: v.requirements,
+        recruiterId: session.user.id,
+      }),
     });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      console.error("Express /jobs failed:", res.status, body);
+      return {
+        ok: false,
+        error: body?.error ?? "Could not publish the job. Please try again.",
+      };
+    }
   } catch (error) {
     console.error("createJob failed:", error);
-    return { ok: false, error: "Could not publish the job. Please try again." };
+    return { ok: false, error: "Could not reach the server. Please try again." };
   }
 
   redirect("/dashboard/recruiter/jobs");

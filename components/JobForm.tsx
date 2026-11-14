@@ -103,11 +103,14 @@ export default function JobForm({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const jobData  ={...form}
+    console.log(jobData)
     setFormError(null);
 
     startTransition(async () => {
       // On success the action redirects, so we only get a result on failure.
       const result = await createJob(values);
+      console.log(result)
       if (result && !result.ok) {
         setErrors(result.fieldErrors ?? {});
         setFormError(

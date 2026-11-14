@@ -216,11 +216,17 @@ const DashboardSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {isPending
-                ? Array.from({ length: 5 }).map((_, index) => (
-                    <SidebarMenuItem key={index}>
-                      <SidebarMenuSkeleton showIcon />
-                    </SidebarMenuItem>
-                  ))
+                      ? [70, 85, 60, 80, 65].map((width, index) => (
+                          <SidebarMenuItem key={index}>
+                            <div className="flex h-8 items-center gap-2 rounded-md px-2">
+                              <div className="size-4 shrink-0 animate-pulse rounded-md bg-white/10" />
+                              <div
+                                className="h-4 animate-pulse rounded-md bg-white/10"
+                                style={{ width: `${width}%` }}
+                              />
+                            </div>
+                          </SidebarMenuItem>
+                        ))
                 : menuItems.map((item) => (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
