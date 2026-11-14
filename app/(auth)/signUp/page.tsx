@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +20,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,6 +31,13 @@ export default function SignUpPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Already signed-in users don't need the sign-up screen
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace("/dashboard");
+    }
+  }, [isPending, session?.user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -82,7 +90,7 @@ export default function SignUpPage() {
 
       setSuccessMessage("Account created successfully! Redirecting...");
       setTimeout(() => {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       }, 1000);
     } catch (err: unknown) {
@@ -99,7 +107,7 @@ export default function SignUpPage() {
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
       if (error) {
         setErrorMessage(
@@ -287,11 +295,11 @@ export default function SignUpPage() {
               Sign Up with Google
             </Button>
 
-            <p className="mt-2 text-center text-xs text-zinc-400">
+            <p className="mt-2 text-center text-xs text-white">
               Already have an account?{" "}
               <Link
                 href="/signIn"
-                className="font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-4"
+                className="font-semibold text-white text-sm hover:text-indigo-300 underline underline-offset-4"
               >
                 Sign In
               </Link>

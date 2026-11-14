@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +20,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function SignInPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,6 +29,13 @@ export default function SignInPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Signed-in users don't need the sign-in screen
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace("/dashboard");
+    }
+  }, [isPending, session?.user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -56,11 +64,10 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await authClient.signIn.email({
+      const { error } = await authClient.signIn.email({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
-      console.log(data)
 
       if (error) {
         setErrorMessage(
@@ -71,7 +78,7 @@ export default function SignInPage() {
 
       setSuccessMessage("Login successful! Redirecting...");
       setTimeout(() => {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       }, 800);
     } catch (err: unknown) {
@@ -89,7 +96,7 @@ export default function SignInPage() {
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
       if (error) {
         setErrorMessage(
@@ -243,11 +250,11 @@ export default function SignInPage() {
               Sign In with Google
             </Button>
 
-            <p className="mt-2 text-center text-xs text-zinc-400">
+            <p className="mt-2 text-center text-xs text-white">
               Don&apos;t have an account?{" "}
               <Link
                 href="/signUp"
-                className="font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-4"
+                className="font-semibold text-white text-sm hover:text-indigo-300 underline underline-offset-4"
               >
                 Sign Up
               </Link>

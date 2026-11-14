@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Briefcase, ArrowLeft, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default async function JobsPage(props: {
   searchParams?: Promise<{ query?: string; location?: string }>;
